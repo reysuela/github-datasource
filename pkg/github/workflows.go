@@ -97,6 +97,8 @@ func keepWorkflowsInTimeRange(workflows []*googlegithub.Workflow, timeField mode
 	return out, nil
 }
 
+// ------------------------------------------------
+
 // WorkflowUsageWrapper is wraps the workflow usage.
 type WorkflowUsageWrapper models.WorkflowUsage
 
@@ -182,4 +184,46 @@ func GetWorkflowUsage(ctx context.Context, client models.Client, opts models.Wor
 	}
 
 	return WorkflowUsageWrapper(data), nil
+}
+
+// ------------------------------------------------
+
+// WorkflowRunWrapper is a wrapper for the workflow runs.
+type WorkflowRunWrapper []models.WorkflowRun
+
+func (run WorkflowRunWrapper) Frames() data.Frames {
+	frame := data.NewFrame(
+		"workflowrun",
+		data.NewField("Workflow Name", nil, []*string{}),
+		data.NewField("Workflow ID", nil, []*string{}),
+		data.NewField("Workflow Run ID", nil, []*string{}),
+		data.NewField("Workflow Run Number", nil, []*string{}),
+		data.NewField("Workflow Created At", nil, []*time.Time{}),
+		data.NewField("Workflow Conclusion", nil, []*string{}),
+	)
+
+	for _, v := range run {
+		frame.AppendRow(
+			v.WorkflowName,
+			v.WorkflowId,
+			v.WorkflowRunId,
+			v.WorkflowRunCreatedAt,
+			v.WorkflowRunConclusion,
+		)
+	}
+
+	return data.Frames{frame}
+}
+
+func GetWorkflowRun(ctx context.Context, client models.Client, opts models.WorkflowRunOptions) (WorkflowRunWrapper, error) {
+	if opts.Owner == "" || opts.Repository == "" || opts.Workflow == "" {
+		return WorkflowRunWrapper{}, nil
+	}
+
+	data, err := client.GetWorkflowRun(ctx, opts.Owner, opts.Repository, opts.Workflow)
+	if err != nil {
+		return WorkflowRunWrapper{}, err
+	}
+
+	return WorkflowRunWrapper(data), nil
 }

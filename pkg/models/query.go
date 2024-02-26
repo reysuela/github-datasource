@@ -129,3 +129,8 @@ type WorkflowUsageQuery struct {
 	Query
 	Options WorkflowUsageOptions `json:"options"`
 }
+
+type WorkflowRunQuery struct {
+	Query
+	Options WorkflowRunOptions `json:"options"`
+}

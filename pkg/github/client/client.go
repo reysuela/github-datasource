@@ -252,3 +252,49 @@ func (client *Client) getWorkflowRuns(ctx context.Context, owner, repo, workflow
 
 	return workflowRuns, response.NextPage, nil
 }
+
+func (client *Client) GetWorkflowRun(ctx context.Context, owner, repo, workflow string) ([]models.WorkflowRun, error) {
+
+	page := 1
+	workflowID, _ := strconv.ParseInt(workflow, 10, 64)
+
+	workflowRuns := []*googlegithub.WorkflowRun{}
+
+	var (
+		runs     *googlegithub.WorkflowRuns
+		response *googlegithub.Response
+		err      error
+	)
+
+	if workflowID > 0 {
+		runs, response, err = client.restClient.Actions.ListWorkflowRunsByID(ctx, owner, repo, workflowID, &googlegithub.ListWorkflowRunsOptions{
+			ListOptions: googlegithub.ListOptions{Page: page, PerPage: 100},
+		})
+	} else {
+		runs, response, err = client.restClient.Actions.ListWorkflowRunsByFileName(ctx, owner, repo, workflow, &googlegithub.ListWorkflowRunsOptions{
+			ListOptions: googlegithub.ListOptions{Page: page, PerPage: 100},
+		})
+	}
+
+	if err != nil {
+		if response.StatusCode == http.StatusNotFound {
+			return nil, errWorkflowNotFound
+		}
+		return nil, fmt.Errorf("fetching workflow runs: %w", err)
+	}
+
+	workflowRuns = append(workflowRuns, runs.WorkflowRuns...)
+	// convert workflowRuns to models.WorkflowRun
+	var workflowRunsModel []models.WorkflowRun
+	for _, run := range workflowRuns {
+		workflowRunsModel = append(workflowRunsModel, models.WorkflowRun{
+			WorkflowName:          run.GetName(),
+			WorkflowId:            strconv.FormatInt(run.GetID(), 10),
+			WorkflowRunId:         strconv.FormatInt(run.GetWorkflowID(), 10),
+			WorkflowRunNumber:     uint64(run.GetRunNumber()),
+			WorkflowRunCreatedAt:  run.GetCreatedAt().Time,
+			WorkflowRunConclusion: run.GetConclusion(),
+		})
+	}
+	return workflowRunsModel, nil
+}

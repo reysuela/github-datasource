@@ -36,6 +36,32 @@ type WorkflowUsageOptions struct {
 	Workflow string `json:"workflow"`
 }
 
+type WorkflowRunOptions struct {
+	// Owner is the owner of the repository (ex: grafana)
+	Owner string `json:"owner"`
+
+	// Repository is the name of the repository being queried (ex: grafana)
+	Repository string `json:"repository"`
+
+	// Workflow is the id or the workflow file name.
+	Workflow string `json:"workflow"`
+
+	// WorkflowName is the name of the workflow
+	WorkflowName string `json:"workflowName"`
+
+	// WorkflowRunId is the id of the workflow run
+	WorkflowRunId string `json:"workflowRunId"`
+
+	// WorkflowRunNumber is the id of the workflow run
+	WorkflowRunNumber string `json:"workflowRunNumber"`
+
+	// Time when the workflow run started
+	WorkflowRunStartedAt time.Time `json:"workflowRunStartedAt"`
+
+	// Time when the workflow run finished
+	WorkflowRunConclusion string `json:"workflowRunConclusion"`
+}
+
 // WorkflowUsage contains a specific workflow usage information.
 type WorkflowUsage struct {
 	CostUSD            float64
@@ -50,4 +76,13 @@ type WorkflowUsage struct {
 	P95RunDuration     time.Duration
 	RunsPerWeekday     map[time.Weekday]uint64
 	UsagePerRunner     map[string]time.Duration
+}
+
+type WorkflowRun struct {
+	WorkflowName          string
+	WorkflowId            string
+	WorkflowRunId         string
+	WorkflowRunNumber     uint64
+	WorkflowRunCreatedAt  time.Time
+	WorkflowRunConclusion string
 }
