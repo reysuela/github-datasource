@@ -66,9 +66,9 @@ type WorkflowUsage struct {
 
 // WorkflowRuns contains a specific workflow runs information.
 type WorkflowRuns struct {
-	Runs           uint64
-	SuccessfulRuns uint64
-	FailedRuns     uint64
-	CancelledRuns  uint64
-	SkippedRuns    uint64
+	RunStartedAt time.Time
+	Duration     int64
+	RunNumber    int32
+	Conclusion   string
+	WorkflowId   string
 }

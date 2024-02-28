@@ -185,31 +185,26 @@ func GetWorkflowUsage(ctx context.Context, client models.Client, opts models.Wor
 }
 
 // WorkflowRunsWrapper  ------------------------------
-type WorkflowRunsWrapper models.WorkflowRuns
+type WorkflowRunsWrapper []models.WorkflowRuns
 
 func (runs WorkflowRunsWrapper) Frames() data.Frames {
 	frame := data.NewFrame(
 		"workflow",
-		data.NewField("runs", nil, []uint64{}),
-		data.NewField("skipped", nil, []string{}),
-		data.NewField("successes", nil, []string{}),
-		data.NewField("failures", nil, []string{}),
-		data.NewField("cancelled", nil, []string{}),
+		data.NewField("runStartedAt", nil, []time.Time{}),
+		data.NewField("duration", nil, []int64{}),
+		data.NewField("runNumber", nil, []int32{}),
+		data.NewField("conclusion", nil, []string{}),
+		data.NewField("workflowId", nil, []string{}),
 	)
-
-	successRate := "No runsz"
-	failureRate := "No runsz"
-	cancelledRate := "No runsz"
-	skippedRate := "No runsz"
-
-	frame.InsertRow(
-		0,
-		runs.Runs,
-		skippedRate,
-		successRate,
-		failureRate,
-		cancelledRate,
-	)
+	for _, run := range runs {
+		frame.AppendRow(
+			run.RunStartedAt,
+			run.Duration,
+			run.RunNumber,
+			run.Conclusion,
+			run.WorkflowId,
+		)
+	}
 
 	frame.Meta = &data.FrameMeta{PreferredVisualization: data.VisTypeTable}
 	return data.Frames{frame}
@@ -221,10 +216,14 @@ func GetWorkflowRuns(ctx context.Context, client models.Client, opts models.Work
 		return WorkflowRunsWrapper{}, nil
 	}
 
-	data, err := client.GetWorkflowRuns(ctx, opts.Owner, opts.Repository, opts.Workflow, timeRange)
+	data, err := client.GetAllWorkflowRuns(ctx, opts.Owner, opts.Repository, opts.Workflow)
 	if err != nil {
 		return WorkflowRunsWrapper{}, err
 	}
+
+	//workflowRuns := []models.WorkflowRuns{}
+	//workflowRuns = append(workflowRuns, data)
+	// convert data to models.WorkflowRuns
 
 	return WorkflowRunsWrapper(data), nil
 }

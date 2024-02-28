@@ -13,5 +13,5 @@ type Client interface {
 	Query(ctx context.Context, q interface{}, variables map[string]interface{}) error
 	ListWorkflows(ctx context.Context, owner, repo string, opts *googlegithub.ListOptions) (*googlegithub.Workflows, *googlegithub.Response, error)
 	GetWorkflowUsage(ctx context.Context, owner, repo, workflow string, timeRange backend.TimeRange) (WorkflowUsage, error)
-	GetWorkflowRuns(ctx context.Context, owner, repo, workflow string, timeRange backend.TimeRange) (WorkflowRuns, error)
+	GetAllWorkflowRuns(ctx context.Context, owner string, repository string, workflow string) ([]WorkflowRuns, error)
 }

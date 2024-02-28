@@ -27,8 +27,7 @@ const (
 	conclusionFailure   = "failure"
 	conclusionCancelled = "cancelled"
 	conclusionSkipped   = "skipped"
-
-	runStatusCompleted = "completed"
+	runStatusCompleted  = "completed"
 )
 
 var errWorkflowNotFound = errors.New("workflow not found")
@@ -215,18 +214,60 @@ func (client *Client) getWorkflowUsage(ctx context.Context, owner, repo string, 
 	return client.restClient.Actions.GetWorkflowUsageByFileName(ctx, owner, repo, workflow)
 }
 
-func (client *Client) GetWorkflowRuns(ctx context.Context, owner, repo, workflow string, timeRange backend.TimeRange) (models.WorkflowRuns, error) {
-	return models.WorkflowRuns{
-		Runs:           45,
-		SuccessfulRuns: 0,
-		FailedRuns:     0,
-		CancelledRuns:  0,
-		SkippedRuns:    0,
-	}, nil
+func (client *Client) GetAllWorkflowRuns(ctx context.Context, owner, repo, workflow string) ([]models.WorkflowRuns, error) {
+	workflowID, _ := strconv.ParseInt(workflow, 10, 64)
+	workflowRuns := []*googlegithub.WorkflowRun{}
+
+	var (
+		runs     *googlegithub.WorkflowRuns
+		response *googlegithub.Response
+		err      error
+	)
+
+	if workflowID > 0 {
+		runs, response, err = client.restClient.Actions.ListWorkflowRunsByID(ctx, owner, repo, workflowID, &googlegithub.ListWorkflowRunsOptions{
+			ListOptions: googlegithub.ListOptions{Page: 1, PerPage: 100}, Status: runStatusCompleted,
+		})
+	} else {
+		runs, response, err = client.restClient.Actions.ListWorkflowRunsByFileName(ctx, owner, repo, workflow, &googlegithub.ListWorkflowRunsOptions{
+			ListOptions: googlegithub.ListOptions{Page: 1, PerPage: 100}, Status: runStatusCompleted,
+		})
+	}
+
+	if err != nil {
+		if response.StatusCode == http.StatusNotFound {
+			return []models.WorkflowRuns{}, errWorkflowNotFound
+		}
+		return []models.WorkflowRuns{}, fmt.Errorf("fetching workflow runs: %w", err)
+	}
+
+	workflowRuns = append(workflowRuns, runs.WorkflowRuns...)
+
+	workflowRunsModels := []models.WorkflowRuns{}
+	for _, run := range workflowRuns {
+		workflowRunsModels = append(workflowRunsModels, models.WorkflowRuns{
+			RunStartedAt: run.GetRunStartedAt().Time,
+			Duration:     run.GetUpdatedAt().Time.Sub(run.GetRunStartedAt().Time).Milliseconds(),
+			RunNumber:    int32(run.GetRunNumber()),
+			Conclusion:   run.GetConclusion(),
+			WorkflowId:   strconv.FormatInt(run.GetID(), 10),
+		})
+
+	}
+	//backend.Logger.Debug("Runs", workflowRuns)
+	//backend.Logger.Debug("Response", response.NextPage)
+	//backend.Logger.Debug("Err", err)
+
+	//runStartedAt time.Time
+	//duration     time.Duration
+	//runNumber    uint64
+	//conclusion   string
+	//workflowId   string
+
+	return workflowRunsModels, nil
 }
 func (client *Client) getWorkflowRuns(ctx context.Context, owner, repo, workflow string, timeRange backend.TimeRange, page int) ([]*googlegithub.WorkflowRun, int, error) {
 	workflowID, _ := strconv.ParseInt(workflow, 10, 64)
-
 	workflowRuns := []*googlegithub.WorkflowRun{}
 
 	format := "2006-01-02"
@@ -258,6 +299,5 @@ func (client *Client) getWorkflowRuns(ctx context.Context, owner, repo, workflow
 	}
 
 	workflowRuns = append(workflowRuns, runs.WorkflowRuns...)
-
 	return workflowRuns, response.NextPage, nil
 }
