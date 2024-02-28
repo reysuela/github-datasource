@@ -215,6 +215,15 @@ func (client *Client) getWorkflowUsage(ctx context.Context, owner, repo string, 
 	return client.restClient.Actions.GetWorkflowUsageByFileName(ctx, owner, repo, workflow)
 }
 
+func (client *Client) GetWorkflowRuns(ctx context.Context, owner, repo, workflow string, timeRange backend.TimeRange) (models.WorkflowRuns, error) {
+	return models.WorkflowRuns{
+		Runs:           45,
+		SuccessfulRuns: 0,
+		FailedRuns:     0,
+		CancelledRuns:  0,
+		SkippedRuns:    0,
+	}, nil
+}
 func (client *Client) getWorkflowRuns(ctx context.Context, owner, repo, workflow string, timeRange backend.TimeRange, page int) ([]*googlegithub.WorkflowRun, int, error) {
 	workflowID, _ := strconv.ParseInt(workflow, 10, 64)
 

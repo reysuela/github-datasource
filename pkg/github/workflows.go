@@ -183,3 +183,48 @@ func GetWorkflowUsage(ctx context.Context, client models.Client, opts models.Wor
 
 	return WorkflowUsageWrapper(data), nil
 }
+
+// WorkflowRunsWrapper  ------------------------------
+type WorkflowRunsWrapper models.WorkflowRuns
+
+func (runs WorkflowRunsWrapper) Frames() data.Frames {
+	frame := data.NewFrame(
+		"workflow",
+		data.NewField("runs", nil, []uint64{}),
+		data.NewField("skipped", nil, []string{}),
+		data.NewField("successes", nil, []string{}),
+		data.NewField("failures", nil, []string{}),
+		data.NewField("cancelled", nil, []string{}),
+	)
+
+	successRate := "No runsz"
+	failureRate := "No runsz"
+	cancelledRate := "No runsz"
+	skippedRate := "No runsz"
+
+	frame.InsertRow(
+		0,
+		runs.Runs,
+		skippedRate,
+		successRate,
+		failureRate,
+		cancelledRate,
+	)
+
+	frame.Meta = &data.FrameMeta{PreferredVisualization: data.VisTypeTable}
+	return data.Frames{frame}
+}
+
+// GetWorkflowRuns return the usage for a specific workflow.
+func GetWorkflowRuns(ctx context.Context, client models.Client, opts models.WorkflowRunsOptions, timeRange backend.TimeRange) (WorkflowRunsWrapper, error) {
+	if opts.Owner == "" || opts.Repository == "" || opts.Workflow == "" {
+		return WorkflowRunsWrapper{}, nil
+	}
+
+	data, err := client.GetWorkflowRuns(ctx, opts.Owner, opts.Repository, opts.Workflow, timeRange)
+	if err != nil {
+		return WorkflowRunsWrapper{}, err
+	}
+
+	return WorkflowRunsWrapper(data), nil
+}

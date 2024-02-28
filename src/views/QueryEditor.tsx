@@ -21,7 +21,7 @@ import QueryEditorVulnerabilities from './QueryEditorVulnerabilities';
 import QueryEditorProjects from './QueryEditorProjects';
 import QueryEditorWorkflows from './QueryEditorWorkflows';
 import QueryEditorWorkflowUsage from './QueryEditorWorkflowUsage';
-import QueryEditorWorkflowRuns from "./QueryEditorWorkflowRuns";
+import QueryEditorWorkflowRuns from './QueryEditorWorkflowRuns';
 
 interface Props extends QueryEditorProps<GithubDataSource, GitHubQuery, GithubDataSourceOptions> {
   queryTypes?: string[];

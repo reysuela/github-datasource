@@ -181,6 +181,17 @@ func (d *Datasource) HandleWorkflowUsageQuery(ctx context.Context, query *models
 	return GetWorkflowUsage(ctx, d.client, opt, req.TimeRange)
 }
 
+// HandleWorkflowRunsQuery is the query handler for getting the usage information of a specific workflow
+func (d *Datasource) HandleWorkflowRunsQuery(ctx context.Context, query *models.WorkflowRunsQuery, req backend.DataQuery) (dfutil.Framer, error) {
+	opt := models.WorkflowRunsOptions{
+		Repository: query.Repository,
+		Owner:      query.Owner,
+		Workflow:   query.Options.Workflow,
+	}
+
+	return GetWorkflowRuns(ctx, d.client, opt, req.TimeRange)
+}
+
 // CheckHealth is the health check for GitHub
 func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	_, err := GetAllRepositories(ctx, d.client, models.ListRepositoriesOptions{
